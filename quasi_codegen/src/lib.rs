@@ -57,7 +57,7 @@ fn expand_quote_ty<'cx>(
     let expanded = expand_parse_call(
         cx,
         sp,
-        &["syntax", "parse", "parser", "Parser", "parse_ty_panic"],
+        &["syntax", "parse", "parser", "Parser", "parse_ty"],
         vec!(),
         tts);
     base::MacEager::expr(expanded)
@@ -71,7 +71,7 @@ fn expand_quote_expr<'cx>(
     let expanded = expand_parse_call(
         cx,
         sp,
-        &["syntax", "parse", "parser", "Parser", "parse_expr_panic"],
+        &["syntax", "parse", "parser", "Parser", "parse_expr"],
         Vec::new(),
         tts);
     base::MacEager::expr(expanded)
@@ -85,7 +85,7 @@ fn expand_quote_stmt<'cx>(
     let expanded = expand_parse_call(
         cx,
         sp,
-        &["syntax", "parse", "parser", "Parser", "parse_stmt_panic"],
+        &["syntax", "parse", "parser", "Parser", "parse_stmt"],
         vec!(),
         tts);
     base::MacEager::expr(expanded)
@@ -101,7 +101,7 @@ fn expand_quote_attr<'cx>(
     let expanded = expand_parse_call(
         cx,
         sp,
-        &["syntax", "parse", "parser", "Parser", "parse_attribute_panic"],
+        &["syntax", "parse", "parser", "Parser", "parse_attribute"],
         vec![builder.expr().bool(true)],
         tts);
 
@@ -135,7 +135,7 @@ fn expand_quote_pat<'cx>(
     let expanded = expand_parse_call(
         cx,
         sp,
-        &["syntax", "parse", "parser", "Parser", "parse_pat_panic"],
+        &["syntax", "parse", "parser", "Parser", "parse_pat"],
         vec!(),
         tts);
     base::MacEager::expr(expanded)
@@ -149,7 +149,7 @@ fn expand_quote_arm<'cx>(
     let expanded = expand_parse_call(
         cx,
         sp,
-        &["syntax", "parse", "parser", "Parser", "parse_arm_panic"],
+        &["syntax", "parse", "parser", "Parser", "parse_arm"],
         vec!(),
         tts);
     base::MacEager::expr(expanded)
@@ -177,7 +177,7 @@ fn expand_quote_item<'cx>(
     let expanded = expand_parse_call(
         cx,
         sp,
-        &["syntax", "parse", "parser", "Parser", "parse_item_panic"],
+        &["syntax", "parse", "parser", "Parser", "parse_item"],
         vec!(),
         tts);
     base::MacEager::expr(expanded)
@@ -583,7 +583,7 @@ fn parse_arguments_to_quote(cx: &ExtCtxt, tts: &[ast::TokenTree])
     let mut p = cx.new_parser_from_tts(tts);
     p.quote_depth += 1;
 
-    let cx_expr = p.parse_expr_panic();
+    let cx_expr = p.parse_expr().unwrap();
     if !p.eat(&token::Comma).ok().unwrap() {
         let _ = p.fatal("expected token `,`");
     }
@@ -716,7 +716,11 @@ fn expand_parse_call(cx: &ExtCtxt,
         .with_args(arg_exprs)
         .build();
 
-    expand_wrapper(sp, cx_expr, expr)
+    let unwrap_call = builder.expr().method_call("unwrap")
+        .build(expr)
+        .build();
+
+    expand_wrapper(sp, cx_expr, unwrap_call)
 }
 
 #[cfg(feature = "with-syntex")]
